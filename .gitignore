@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Environment / secrets
+.env
+*.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Editor / OS cruft
+*.swp
+*~
+.idea/
+.vscode/
+
+# Claude Code (local agent config — not part of the benchmark)
+.claude/
