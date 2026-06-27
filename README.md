@@ -70,6 +70,63 @@ For each scenario, the model observes the goal state and then a sequence of per-
 
 ---
 
+## Results
+
+We evaluate nine VLMs zero-shot — three hosted-API models (GPT-5.2, Gemini 3 Flash, Claude Sonnet 4.6) and six open-weight local models. The full analysis is in the paper; the headline results are below.
+
+**Key findings**
+
+- **Spatial contact reasoning (Q3) is the universal bottleneck.** No local model exceeds 28% on Q3 on either task, and every API model collapses to 12–16% on the 16-block Wooden Puzzle despite strong block identification.
+- **Action evaluation degrades over time while perception stays stable.** On Task 1, API Q4 accuracy falls from ~80% at Turn 1 to ≤16% by Turn 8, even though Q1 stays above 80% throughout — a dissociation between *seeing* and *reasoning*.
+- **Large API–local gap.** The best local model trails the best API model by ~49% (Task 1) and ~25% (Task 2) in overall accuracy.
+
+### Per-question accuracy (%)
+
+Q2 is excluded from Turn 1; Q4-2 is scored only on turns with error ground truth. Best per column in **bold**.
+
+**Task 1: Tangram (7 blocks, 2D)**
+
+| Model | Type | Q1 | Q2 | Q3 | Q4 | Q4-2 | Overall |
+|-------|:----:|:--:|:--:|:--:|:--:|:----:|:-------:|
+| GPT-5.2 | API | 94.8 | 89.7 | **74.9** | **50.5** | 63.6 | **77.0** |
+| Gemini 3 Flash | API | **95.6** | **92.7** | 69.5 | 42.2 | 68.2 | 74.3 |
+| Claude Sonnet 4.6 | API | 86.8 | 83.8 | 49.7 | 29.9 | 71.4 | 62.0 |
+| Qwen3-VL-8B | Local | 39.2 | 14.5 | 27.9 | 18.2 | 22.4 | 24.1 |
+| InternVL3-8B | Local | 34.5 | 24.5 | 5.2 | 15.6 | 20.7 | 15.4 |
+| Qwen2.5-VL-7B | Local | 30.5 | 15.4 | 13.3 | 0.6 | **78.6** | 14.1 |
+| VideoChat-R1-7B | Local | 33.2 | 21.8 | 6.8 | 0.4 | 40.0 | 10.9 |
+| InternVL3.5-8B | Local | 20.6 | 9.4 | 8.6 | 3.3 | 28.9 | 9.2 |
+| LLaVA-OV-7B | Local | 19.1 | 19.9 | 0.0 | 0.0 | 61.4 | 7.3 |
+
+**Task 2: Wooden Puzzle (16 blocks)**
+
+| Model | Type | Q1 | Q2 | Q3 | Q4 | Q4-2 | Overall |
+|-------|:----:|:--:|:--:|:--:|:--:|:----:|:-------:|
+| Claude Sonnet 4.6 | API | **65.6** | **56.3** | 13.6 | 36.1 | 63.0 | **42.8** |
+| GPT-5.2 | API | 58.7 | 49.6 | **15.9** | 34.4 | 47.1 | 39.3 |
+| Gemini 3 Flash | API | 52.9 | 45.1 | 12.2 | 28.6 | 56.9 | 34.7 |
+| InternVL3-8B | Local | 6.1 | 7.6 | 1.3 | **41.9** | **65.6** | 17.5 |
+| Qwen3-VL-8B | Local | 13.5 | 1.1 | 0.1 | 22.1 | 58.2 | 11.1 |
+| LLaVA-OV-7B | Local | 6.1 | 7.9 | 0.0 | 0.0 | 65.6 | 6.9 |
+| VideoChat-R1-7B | Local | 9.2 | 1.1 | 5.3 | 4.6 | 33.8 | 6.8 |
+| InternVL3.5-8B | Local | 4.0 | 0.9 | 0.4 | 10.7 | 63.0 | 5.8 |
+| Qwen2.5-VL-7B | Local | 10.7 | 0.7 | 0.1 | 1.9 | 42.9 | 5.0 |
+
+### Temporal degradation (Task 1, API models)
+
+Q1 (perception) stays stable across turns while Q4 (action evaluation) collapses — the benchmark's central finding.
+
+| Model | Q | T1 | T2 | T3 | T4 | T5 | T6 | T7 | T8 |
+|-------|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| GPT-5.2 | Q1 | 90.7 | 94.0 | 92.0 | 100.0 | 97.3 | 96.7 | 95.3 | 90.8 |
+| GPT-5.2 | Q4 | 81.3 | 79.3 | 58.0 | 56.0 | 47.3 | 36.0 | 19.3 | 3.9 |
+| Gemini 3 Flash | Q1 | 93.3 | 94.7 | 94.7 | 99.3 | 96.7 | 96.0 | 94.0 | 96.1 |
+| Gemini 3 Flash | Q4 | 81.3 | 66.0 | 43.3 | 40.7 | 33.3 | 28.0 | 16.0 | 15.8 |
+| Claude Sonnet 4.6 | Q1 | 89.3 | 85.3 | 81.3 | 92.0 | 89.3 | 84.0 | 89.3 | 80.3 |
+| Claude Sonnet 4.6 | Q4 | 79.3 | 35.3 | 28.7 | 22.7 | 24.0 | 20.7 | 8.7 | 10.5 |
+
+---
+
 ## Repository Layout
 
 ```
