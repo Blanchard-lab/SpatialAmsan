@@ -3,19 +3,19 @@
 ### A Benchmark for Perception-Grounded Spatial Reasoning and Action Evaluation in Egocentric Manipulation
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
-[![Data](https://img.shields.io/badge/data-frames%20%2B%20problems-success.svg)](#-repository-layout)
-[![Scenarios](https://img.shields.io/badge/scenarios-282-orange.svg)](#-benchmark-at-a-glance)
-[![Turns](https://img.shields.io/badge/evaluation%20turns-1801-orange.svg)](#-benchmark-at-a-glance)
+[![Data](https://img.shields.io/badge/data-frames%20%2B%20problems-success.svg)](#repository-layout)
+[![Scenarios](https://img.shields.io/badge/scenarios-282-orange.svg)](#benchmark-at-a-glance)
+[![Turns](https://img.shields.io/badge/evaluation%20turns-1801-orange.svg)](#benchmark-at-a-glance)
 
 **Spatial Amsan** is a benchmark for evaluating *state-based spatial reasoning* and *action assessment* in egocentric manipulation videos. The term *amsan* (Korean for **mental arithmetic**) reflects the core challenge: constructing and continuously updating an internal spatial state to judge whether each manipulation advances toward a goal.
 
 The benchmark comprises two block-manipulation tasks of increasing complexity — a **Tangram** task (7 colored blocks) and a **Wooden Puzzle** task (16 blocks) — yielding **282 scenarios** and **1,801 evaluation turns**. Models are evaluated through a multi-turn protocol that diagnostically isolates four capabilities: **visual perception**, **temporal state tracking**, **spatial contact reasoning**, and **goal-directed action evaluation**, with a conditional follow-up probing **reversibility reasoning**.
 
-> If you use this benchmark, please **cite our paper** (see [Citation](#-citation)). The data and annotations are released under the **Apache-2.0** license.
+> If you use this benchmark, please **cite our paper** (see [Citation](#citation)). The data and annotations are released under the **Apache-2.0** license.
 
 ---
 
-## 📸 Capture Setup
+## Capture Setup
 
 Egocentric video is captured in a controlled environment with both puzzles on a shared workspace.
 
@@ -25,7 +25,7 @@ Egocentric video is captured in a controlled environment with both puzzles on a 
 
 ---
 
-## 🧩 The Two Tasks
+## The Two Tasks
 
 ### Task 1 — Tangram (7 colored blocks)
 
@@ -59,7 +59,7 @@ For each scenario, the model observes the goal state and then a sequence of per-
 
 ---
 
-## 📊 Benchmark at a Glance
+## Benchmark at a Glance
 
 | | Tangram | Wooden Puzzle | Total |
 |---|--------:|--------------:|------:|
@@ -70,7 +70,7 @@ For each scenario, the model observes the goal state and then a sequence of per-
 
 ---
 
-## 📁 Repository Layout
+## Repository Layout
 
 ```
 SpatialAmsan/
@@ -89,6 +89,19 @@ SpatialAmsan/
 │       ├── blocks.jpg               # reference image of the 16 blocks
 │       ├── _frame_indices.json
 │       └── pNN_sMM/
+├── task1_eval/                      # Tangram evaluation engines
+│   ├── apis/evaluate_task1.py       #   hosted API models (OpenAI/Claude/Gemini)
+│   └── local/evaluate_local_task1.py#   local open-weight models (transformers)
+├── task2_eval/                      # Wooden Puzzle evaluation engines
+│   ├── apis/evaluate_task2.py
+│   └── local/evaluate_local_task2.py
+├── scripts/                         # launchers & helpers
+│   ├── load_env.sh                  #   loads API keys from .env
+│   ├── run_task{1,2}_{api,local}.sh #   run a task against API / local models
+│   ├── verify_task{1,2}_{api,local}_sample.sh  # quick smoke tests
+│   └── merge_shards.py              #   merge sharded result files
+├── requirements.txt
+├── .env.example                     # API-key template (copy to .env)
 ├── assets/                          # figures used in this README
 └── LICENSE
 ```
@@ -101,7 +114,7 @@ SpatialAmsan/
 
 ---
 
-## 🗂️ Problem-Set Format
+## Problem-Set Format
 
 > The problem sets (`problems/tangram.json`, `problems/wooden_puzzle.json`) are **pure, standard JSON** — strictly parseable, with **no comments or trailing commas**. The format is documented here in the README rather than inline in the files.
 
@@ -145,13 +158,13 @@ Each entry in `problems` is one scenario:
 
 **Answer encoding.** `q1`/`q2` are integer option ids; `q3`/`q4` are lists of integer option ids; `q4_2` is a binary (`"Yes"`/`"No"`) gated on `q4`; the `q*_1`/`q*_2_1` fields are free-text rationales. Resolve every id against the matching `*_options` list in `question_header` (the option text is the ground truth label). Image paths are repo-root-relative.
 
-> ℹ️ The `// ...` markers above are explanatory only — the actual `.json` files contain no comments.
+> Note: the `// ...` markers above are explanatory only — the actual `.json` files contain no comments.
 
 ---
 
-## 🔑 Evaluation Setup & API Keys
+## Evaluation Setup & API Keys
 
-> The benchmark **data** (`frames/`, `problems/`) needs no keys. API keys are only required to run the **evaluation scripts** against hosted models *(scripts are released separately).*
+> The benchmark **data** (`frames/`, `problems/`) needs no keys. API keys are only required to run the **hosted-API evaluation** (`*_api.sh`); local open-weight models run without any key.
 
 Provide keys via a local `.env` file at the repo root — **never commit real keys**. A template is provided:
 
@@ -176,20 +189,129 @@ Security notes:
 
 ---
 
-## 🎥 Original (Raw) Video Data
+## Running the Evaluation
+
+### 1. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+If you only run hosted API models you can skip the local (`torch`/`transformers`) block in `requirements.txt`, and vice versa.
+
+### 2. Run from the repository root
+
+All scripts use repo-relative paths and must be launched from the repo root. Results are written to `./results/`.
+
+#### Hosted API models (OpenAI / Claude / Gemini)
+
+Requires a configured `.env` (see [above](#evaluation-setup--api-keys)). The launchers run all three API models in sequence:
+
+```bash
+./scripts/run_task1_api.sh        # Task 1 (Tangram)
+./scripts/run_task2_api.sh        # Task 2 (Wooden Puzzle)
+```
+
+Override the model ids per provider with environment variables:
+
+```bash
+OPENAI_MODEL=gpt-5.2 \
+CLAUDE_MODEL=claude-sonnet-4-6 \
+GEMINI_MODEL=gemini-3-flash-preview \
+  ./scripts/run_task1_api.sh
+```
+
+Run a **single** API model, or only a slice of scenarios, by calling the engine directly:
+
+```bash
+# Claude only, Task 1, scenarios 0–4 (the --end bound is exclusive)
+python task1_eval/apis/evaluate_task1.py \
+  --api claude \
+  --problems ./problems/tangram.json \
+  --frames_dir ./frames \
+  --output ./results/task1_claude.json \
+  --claude_model claude-sonnet-4-6 \
+  --start 0 --end 5 \
+  --max_new_tokens 2048 \
+  --delay 0.5
+```
+
+#### Local open-weight models (no API key needed)
+
+The launchers default to three models — Qwen2.5-VL-7B, InternVL3-8B, and LLaVA-OneVision-7B:
+
+```bash
+./scripts/run_task1_local.sh      # Task 1, all default local models
+./scripts/run_task2_local.sh      # Task 2
+```
+
+Select specific models with `MODELS` (comma-separated):
+
+```bash
+MODELS="qwen2p5_vl_7b" ./scripts/run_task1_local.sh                  # single model
+MODELS="qwen2p5_vl_7b,internvl3_8b_hf" ./scripts/run_task2_local.sh  # subset
+```
+
+Available model ids: `qwen2p5_vl_7b`, `internvl3_8b_hf`, `llava_onevision_qwen2_7b_ov_hf`. The large `llama4_scout_17b16e` is excluded by default (very slow); enable it with `MODELS="all"` or `./scripts/run_task1_local.sh --llama4-only`.
+
+Call the engine directly for full control over device and precision:
+
+```bash
+python task1_eval/local/evaluate_local_task1.py \
+  --problems ./problems/tangram.json \
+  --frames_dir ./frames \
+  --output_dir ./results/local \
+  --models qwen2p5_vl_7b \
+  --start 0 --end 5 \
+  --max_new_tokens 512 \
+  --device_map auto \
+  --dtype bf16
+```
+
+### 3. Smoke-test before a full run
+
+Each verify script runs a single scenario and prints per-turn scores side by side — a fast way to confirm keys, model ids, and GPU setup:
+
+```bash
+./scripts/verify_task1_api_sample.sh                  # 1 scenario, all 3 API models
+SAMPLE_IDX=3 ./scripts/verify_task1_local_sample.sh   # pick a scenario, local models
+MODELS="qwen2p5_vl_7b" ./scripts/verify_task2_local_sample.sh
+```
+
+### Environment overrides
+
+| Variable | Applies to | Default | Purpose |
+|----------|------------|---------|---------|
+| `PROBLEMS` | all | `./problems/<task>.json` | problem-set file |
+| `FRAMES_DIR` | all | `./frames` | frames root |
+| `START` / `END` | all | `0` / end | evaluate a scenario slice (`END` exclusive; used for sharding) |
+| `MAX_TOKENS` | all | 2048 (API) / 512 (local) | max new tokens per turn |
+| `DELAY` | API | `0.5` | seconds between API calls (rate-limit safety) |
+| `MODELS` | local | all except llama4 | comma-separated local model ids |
+| `DEVICE_MAP` / `DTYPE` | local | `auto` / `bf16` | device placement and precision |
+| `OPENAI_MODEL` / `CLAUDE_MODEL` / `GEMINI_MODEL` | API | paper defaults | override API model ids |
+| `SAMPLE_IDX` | verify | `0` | which scenario the smoke test runs |
+
+### Output
+
+Each engine writes per-model JSON to `./results/` containing every turn's parsed model answer, the ground truth, and per-question correctness for scoring. Sharded runs (split via `START`/`END`) can be recombined with `scripts/merge_shards.py`.
+
+---
+
+## Original (Raw) Video Data
 
 The `frames/` here are sampled from the original recordings. We additionally release the **source videos (minimum-cut)** for both monocular and stereo captures:
 
 | Task | Monocular | Stereo |
 |------|-----------|--------|
-| **Tangram** | [Google Drive ↗](https://drive.google.com/drive/folders/1B-K7ku5ZI4BZEhoU6ZbPIsfm3Q5j__Ki?usp=sharing) | [Google Drive ↗](https://drive.google.com/drive/folders/1vpOE275ZEaWWW-bEsqjoonssJ2CV5jvU?usp=sharing) |
-| **Wooden Puzzle** | [Google Drive ↗](https://drive.google.com/drive/folders/11PVOPmSFzzuQPjOjQbt8s46On9690o5n?usp=sharing) | [Google Drive ↗](https://drive.google.com/drive/folders/1xR6xd2-ihnR9xhDkodEIGzgfTNdYoGA3?usp=sharing) |
+| **Tangram** | [Google Drive](https://drive.google.com/drive/folders/1B-K7ku5ZI4BZEhoU6ZbPIsfm3Q5j__Ki?usp=sharing) | [Google Drive](https://drive.google.com/drive/folders/1vpOE275ZEaWWW-bEsqjoonssJ2CV5jvU?usp=sharing) |
+| **Wooden Puzzle** | [Google Drive](https://drive.google.com/drive/folders/11PVOPmSFzzuQPjOjQbt8s46On9690o5n?usp=sharing) | [Google Drive](https://drive.google.com/drive/folders/1xR6xd2-ihnR9xhDkodEIGzgfTNdYoGA3?usp=sharing) |
 
 > Each linked video contains the minimum cut only.
 
 ---
 
-## 📝 Citation
+## Citation
 
 If you use Spatial Amsan in your research, please cite:
 
@@ -207,7 +329,7 @@ If you use Spatial Amsan in your research, please cite:
 
 ---
 
-## ⚖️ License
+## License
 
 This benchmark — data, annotations, and accompanying materials — is released under the
 [Apache License 2.0](./LICENSE). You are free to use, modify, and distribute it,

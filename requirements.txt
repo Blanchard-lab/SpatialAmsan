@@ -1,0 +1,19 @@
+# SpatialAmsan — evaluation dependencies
+# Install with:  pip install -r requirements.txt
+#
+# Tip: if you only run hosted (API) models, you can skip the "Local models"
+# block below (torch/transformers are large). If you only run local models,
+# you can skip the API SDKs.
+
+# ---- Shared ----
+Pillow>=10.0
+
+# ---- Hosted API models (Task 1 & 2, evaluate_task*.py) ----
+openai>=1.40
+anthropic>=0.40
+google-genai>=0.3
+
+# ---- Local open-weight models (evaluate_local_task*.py) ----
+torch>=2.2
+transformers>=4.45
+accelerate>=0.30
